@@ -308,6 +308,16 @@ before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
   )
 
+(defun my/use-eslint-from-node-modules ()
+  (let ((root (locate-dominating-file
+               (or (buffer-file-name) default-directory)
+               (lambda (dir)
+                 (let ((eslint (expand-file-name "node_modules/eslint/bin/eslint.js" dir)))
+                   (and eslint (file-executable-p eslint)))))))
+    (when root
+      (let ((eslint (expand-file-name "node_modules/eslint/bin/eslint.js" root)))
+        (setq-local flycheck-javascript-eslint-executable eslint)))))
+
 (defun dotspacemacs/user-config ()
   "Configuration function for user code.
 This function is called at the very end of Spacemacs initialization after
@@ -333,4 +343,15 @@ you should place your code here."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+(when (and (memq window-system '(mac ns))
+           (require 'exec-path-from-shell nil t))
+  ;; (setq exec-path-from-shell-debug t)
+  (exec-path-from-shell-initialize)
+  (exec-path-from-shell-copy-envs '("LANG" "LC_ALL"))
+  (message "Initialized PATH and other variables from SHELL."))
+
+(add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
+
+(setq js2-mode-show-parse-errors nil)
+(setq js2-mode-show-strict-warnings nil)
 )
